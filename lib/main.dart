@@ -34,7 +34,7 @@ class _HomeState extends State<Home> {
     super.initState();
     loadItems();
   }
-  
+ 
   Future pickImage() async {
     final pickedFile =
         await ImagePicker().pickImage(source: ImageSource.camera);
@@ -97,23 +97,39 @@ class _HomeState extends State<Home> {
   child: ListView.builder(
     itemCount: items.length,
     itemBuilder: (context, index) {
-      return CheckboxListTile(
-        value: items[index]["done"],
+      return Dismissible(
+    key: Key(items[index]["text"] + index.toString()),
+    direction: DismissDirection.horizontal, // swipe da destra a sinistra
+    onDismissed: (direction) {
+      setState(() {
+        items.removeAt(index);
+      });
+      saveItems();
+    },
+    background: Container(
+      color: Colors.red,
+      padding: EdgeInsets.symmetric(horizontal: 20),
+      alignment: Alignment.centerRight,
+      child: Icon(Icons.delete, color: Colors.white),
+    ),
+    child: CheckboxListTile(
+      value: items[index]["done"],
+      onChanged: (value) {
+        setState(() {
+          items[index]["done"] = value;
+        });
+        saveItems();
+      },
+      title: TextField(
+        controller: TextEditingController(text: items[index]["text"]),
         onChanged: (value) {
-          setState(() {
-            items[index]["done"] = value;
-          });
+          items[index]["text"] = value;
           saveItems();
         },
-        title: TextField(
-          controller: TextEditingController(text: items[index]["text"]),
-          onChanged: (value) {
-            items[index]["text"] = value;
-            saveItems();
-          },
-          decoration: InputDecoration(border: InputBorder.none),
-        ),
-      );
+        decoration: InputDecoration(border: InputBorder.none),
+      ),
+    ),
+  );
     },
   ),
 )
