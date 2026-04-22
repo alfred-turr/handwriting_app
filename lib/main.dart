@@ -34,7 +34,44 @@ class _HomeState extends State<Home> {
     super.initState();
     loadItems();
   }
- 
+  void addItem() {
+  TextEditingController controller = TextEditingController();
+
+  showDialog(
+    context: context,
+    builder: (context) {
+      return AlertDialog(
+        title: Text("Nuovo elemento"),
+        content: TextField(
+          controller: controller,
+          decoration: InputDecoration(hintText: "Es. pane"),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text("Annulla"),
+          ),
+          TextButton(
+            onPressed: () {
+              if (controller.text.trim().isNotEmpty) {
+                setState(() {
+                  items.add({
+                    "text": controller.text.trim(),
+                    "done": false
+                  });
+                });
+                saveItems();
+              }
+              Navigator.pop(context);
+            },
+            child: Text("Aggiungi"),
+          ),
+        ],
+      );
+    },
+  );
+}
+
   Future pickImage() async {
     final pickedFile =
         await ImagePicker().pickImage(source: ImageSource.camera);
@@ -85,6 +122,10 @@ class _HomeState extends State<Home> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      floatingActionButton: FloatingActionButton(
+      onPressed: addItem,
+      child: Icon(Icons.add),
+    ),
       appBar: AppBar(title: Text("OCR App")),
       body: Column(
         children: [
