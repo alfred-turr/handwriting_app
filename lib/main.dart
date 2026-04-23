@@ -14,7 +14,14 @@ void main() {
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(home: Home());
+    return MaterialApp(
+  debugShowCheckedModeBanner: false,
+  theme: ThemeData(
+    useMaterial3: true,
+    colorSchemeSeed: Colors.green,
+  ),
+  home: Home(),
+);
   }
 }
 
@@ -122,11 +129,18 @@ class _HomeState extends State<Home> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      floatingActionButton: FloatingActionButton(
-      onPressed: addItem,
-      child: Icon(Icons.add),
-    ),
-      appBar: AppBar(title: Text("OCR App")),
+      floatingActionButton: FloatingActionButton.extended(
+  onPressed: addItem,
+  icon: Icon(Icons.add),
+  label: Text("Add new Item"),
+),
+      appBar: AppBar(
+  title: Text(
+    "Shopping List",
+    style: TextStyle(fontWeight: FontWeight.bold),
+  ),
+  centerTitle: true,
+),
       body: Column(
         children: [
           ElevatedButton(
@@ -135,7 +149,16 @@ class _HomeState extends State<Home> {
           ),
           if (image != null) Image.file(image!, height: 200),
           Expanded(
-  child: ListView.builder(
+            
+  child:
+  items.isEmpty
+    ? Center(
+        child: Text(
+          "Nessun elemento 🛒",
+          style: TextStyle(fontSize: 18, color: Colors.grey),
+        ),
+      )
+  : ListView.builder(
     itemCount: items.length,
     itemBuilder: (context, index) {
       return Dismissible(
@@ -153,23 +176,35 @@ class _HomeState extends State<Home> {
       alignment: Alignment.centerRight,
       child: Icon(Icons.delete, color: Colors.white),
     ),
-    child: CheckboxListTile(
-      value: items[index]["done"],
-      onChanged: (value) {
-        setState(() {
-          items[index]["done"] = value;
-        });
-        saveItems();
-      },
-      title: TextField(
-        controller: TextEditingController(text: items[index]["text"]),
-        onChanged: (value) {
-          items[index]["text"] = value;
-          saveItems();
-        },
-        decoration: InputDecoration(border: InputBorder.none),
-      ),
-    ),
+    child: Card(
+  margin: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+  shape: RoundedRectangleBorder(
+    borderRadius: BorderRadius.circular(12),
+  ),
+  child: CheckboxListTile(
+    value: items[index]["done"],
+    onChanged: (value) {
+      setState(() {
+        items[index]["done"] = value;
+      });
+      saveItems();
+    },
+    title: TextField(
+  controller: TextEditingController(text: items[index]["text"]),
+  style: TextStyle(
+    decoration: items[index]["done"]
+        ? TextDecoration.lineThrough
+        : TextDecoration.none,
+    color: items[index]["done"] ? Colors.grey : Colors.black,
+  ),
+  onChanged: (value) {
+    items[index]["text"] = value;
+    saveItems();
+  },
+  decoration: InputDecoration(border: InputBorder.none),
+),
+  ),
+),
   );
     },
   ),
