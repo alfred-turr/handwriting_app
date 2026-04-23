@@ -28,6 +28,7 @@ environment:
 # the latest version available on pub.dev. To see which dependencies have newer
 # versions available, run `flutter pub outdated`.
 dependencies:
+  opencv_dart: ^1.0.0
   shared_preferences: ^2.2.2
   google_mlkit_text_recognition: ^0.11.0
   image_picker: ^1.0.4

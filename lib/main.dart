@@ -5,6 +5,7 @@ import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'item.dart';
+import 'package:opencv_dart/opencv_dart.dart' as cv;
 
 void main() {
   runApp(MyApp());
@@ -77,15 +78,54 @@ class _HomeState extends State<Home> {
   );
 }
 
-List<Item> parseItems(String text) {
-  return text
+bool isValidItem(String text) {
+  // evita roba tipo "123", "***", ecc
+  if (text.length < 2) return false;
+  if (RegExp(r"^[^a-zA-Z]+$").hasMatch(text)) return false;
+  return true;
+}
+
+List<Item> parseItemsAdvanced(String text) {
+  // normalizza tutto
+  String cleaned = text
+      .toLowerCase()
       .replaceAll("\n", ",")
-      .replaceAll(RegExp(r"[•\-–]"), "")
+      .replaceAll(RegExp(r"[•\-–]"), ",")
+      .replaceAll(" e ", ","); // pane e latte → pane, latte
+
+  return cleaned
       .split(RegExp(r"[,\;]"))
-      .map((e) => e.trim().toLowerCase())
-      .where((e) => e.isNotEmpty && e.length > 1)
+      .map((e) => e.trim())
+      .where((e) => isValidItem(e))
       .map((e) => Item(text: e))
       .toList();
+}
+
+Future<String> preprocessImage(String path) async {
+  // carica immagine
+  final image = cv.imread(path);
+
+  // scala in grigio
+  final gray = cv.cvtColor(image, cv.COLOR_BGR2GRAY);
+
+  
+
+  // aumenta contrasto (threshold)
+  final result = cv.threshold(
+  gray,
+  0,
+  255,
+  cv.THRESH_BINARY + cv.THRESH_OTSU,
+);
+
+// prendi solo l'immagine
+final thresholdImage = result.$2;
+
+  // salva immagine temporanea
+  final outputPath = path.replaceAll(".jpg", "_processed.jpg");
+  cv.imwrite(outputPath, thresholdImage);
+
+  return outputPath;
 }
 
   Future pickImage() async {
@@ -120,15 +160,21 @@ Future loadItems() async {
 }
 
   Future readText() async {
-    final inputImage = InputImage.fromFile(image!);
-    final textRecognizer = TextRecognizer();
-    final RecognizedText recognizedText =
-        await textRecognizer.processImage(inputImage);
+   Future readText() async {
+  final processedPath = await preprocessImage(image!.path);
 
-    setState(() {
-      result = recognizedText.text;
-      items = parseItems(result);
-});
+  final inputImage = InputImage.fromFilePath(processedPath);
+  final textRecognizer = TextRecognizer();
+
+  final recognizedText =
+      await textRecognizer.processImage(inputImage);
+
+  setState(() {
+    result = recognizedText.text;
+    items = parseItemsAdvanced(result);
+  });
+}
+
   }
 
   @override
