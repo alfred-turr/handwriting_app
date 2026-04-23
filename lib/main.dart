@@ -79,6 +79,17 @@ class _HomeState extends State<Home> {
   );
 }
 
+List<Map<String, dynamic>> parseItems(String text) {
+  return text
+      .replaceAll("\n", ",")
+      .replaceAll(RegExp(r"[•\-–]"), "")
+      .split(RegExp(r"[,\;]"))
+      .map((e) => e.trim().toLowerCase())
+      .where((e) => e.isNotEmpty && e.length > 1)
+      .map((e) => {"text": e, "done": false})
+      .toList();
+}
+
   Future pickImage() async {
     final pickedFile =
         await ImagePicker().pickImage(source: ImageSource.camera);
@@ -117,12 +128,7 @@ class _HomeState extends State<Home> {
 
     setState(() {
       result = recognizedText.text;
-      items = result
-        .split(",")
-        .map((e) => e.trim())
-        .where((e) => e.isNotEmpty)
-        .map((e) => {"text": e, "done": false})
-        .toList();
+      items = parseItems(result);
 });
   }
 
