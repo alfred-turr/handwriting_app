@@ -78,6 +78,33 @@ class _HomeState extends State<Home> {
   );
 }
 
+void confirmClearAll() async {
+  final confirm = await showDialog<bool>(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: Text("Conferma"),
+      content: Text("Vuoi cancellare tutta la lista?"),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context, false),
+          child: Text("No"),
+        ),
+        TextButton(
+          onPressed: () => Navigator.pop(context, true),
+          child: Text("Sì"),
+        ),
+      ],
+    ),
+  );
+
+  if (confirm == true) {
+    setState(() {
+      items.clear();
+    });
+    saveItems();
+  }
+}
+
 bool isValidItem(String text) {
   // evita roba tipo "123", "***", ecc
   if (text.length < 2) return false;
@@ -180,10 +207,45 @@ Future loadItems() async {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      floatingActionButton: FloatingActionButton.extended(
-  onPressed: addItem,
-  icon: Icon(Icons.add),
-  label: Text("Add new Item"),
+      bottomNavigationBar: SafeArea(
+  child: Container(
+    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black12,
+          blurRadius: 8,
+        )
+      ],
+    ),
+    child: Row(
+      children: [
+        // ➕ AGGIUNGI
+        Expanded(
+          child: ElevatedButton.icon(
+            onPressed: addItem,
+            icon: Icon(Icons.add),
+            label: Text("Aggiungi"),
+          ),
+        ),
+
+        SizedBox(width: 12),
+
+        // 🗑 CANCELLA TUTTO
+        Expanded(
+          child: ElevatedButton.icon(
+            onPressed: confirmClearAll,
+            icon: Icon(Icons.delete),
+            label: Text("Svuota"),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+            ),
+          ),
+        ),
+      ],
+    ),
+  ),
 ),
       appBar: AppBar(
   title: Text(
