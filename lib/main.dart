@@ -4,6 +4,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
+import 'item.dart';
 
 void main() {
   runApp(MyApp());
@@ -34,7 +35,7 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
   File? image;
   String result = "";
-  List<Map<String, dynamic>> items = [];
+  List<Item> items = [];
 
   @override
   void initState() {
@@ -62,10 +63,7 @@ class _HomeState extends State<Home> {
             onPressed: () {
               if (controller.text.trim().isNotEmpty) {
                 setState(() {
-                  items.add({
-                    "text": controller.text.trim(),
-                    "done": false
-                  });
+                  items.add(Item(text: controller.text.trim()));
                 });
                 saveItems();
               }
@@ -79,14 +77,14 @@ class _HomeState extends State<Home> {
   );
 }
 
-List<Map<String, dynamic>> parseItems(String text) {
+List<Item> parseItems(String text) {
   return text
       .replaceAll("\n", ",")
       .replaceAll(RegExp(r"[•\-–]"), "")
       .split(RegExp(r"[,\;]"))
       .map((e) => e.trim().toLowerCase())
       .where((e) => e.isNotEmpty && e.length > 1)
-      .map((e) => {"text": e, "done": false})
+      .map((e) => Item(text: e))
       .toList();
 }
 
@@ -104,18 +102,19 @@ List<Map<String, dynamic>> parseItems(String text) {
   Future saveItems() async {
   final prefs = await SharedPreferences.getInstance();
   List<String> data =
-      items.map((e) => jsonEncode(e)).toList();
+      items.map((e) => jsonEncode(e.toJson())).toList();
   prefs.setStringList("shopping_list", data);
-  }
+}
 
-  Future loadItems() async {
+Future loadItems() async {
   final prefs = await SharedPreferences.getInstance();
   List<String>? data = prefs.getStringList("shopping_list");
+
   if (data != null) {
     setState(() {
       items = data
-        .map((e) => Map<String, dynamic>.from(jsonDecode(e)))
-        .toList();
+          .map((e) => Item.fromJson(jsonDecode(e)))
+          .toList();
     });
   }
 }
@@ -168,7 +167,7 @@ List<Map<String, dynamic>> parseItems(String text) {
     itemCount: items.length,
     itemBuilder: (context, index) {
       return Dismissible(
-    key: Key(items[index]["text"] + index.toString()),
+    key: Key(items[index].text + index.toString()),
     direction: DismissDirection.horizontal, // swipe da destra a sinistra
     onDismissed: (direction) {
       setState(() {
@@ -188,23 +187,23 @@ List<Map<String, dynamic>> parseItems(String text) {
     borderRadius: BorderRadius.circular(12),
   ),
   child: CheckboxListTile(
-    value: items[index]["done"],
-    onChanged: (value) {
-      setState(() {
-        items[index]["done"] = value;
-      });
-      saveItems();
-    },
+    value: items[index].done,
+onChanged: (value) {
+  setState(() {
+    items[index].done = value!;
+  });
+  saveItems();
+},
     title: TextField(
-  controller: TextEditingController(text: items[index]["text"]),
+  controller: TextEditingController(text: items[index].text),
   style: TextStyle(
-    decoration: items[index]["done"]
+    decoration: items[index].done
         ? TextDecoration.lineThrough
         : TextDecoration.none,
-    color: items[index]["done"] ? Colors.grey : Colors.black,
+    color: items[index].done ? Colors.grey : Colors.black,
   ),
   onChanged: (value) {
-    items[index]["text"] = value;
+    items[index].text = value;
     saveItems();
   },
   decoration: InputDecoration(border: InputBorder.none),
